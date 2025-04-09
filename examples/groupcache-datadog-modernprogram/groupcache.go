@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/modernprogram/groupcache/v2"
@@ -12,7 +14,7 @@ import (
 
 func startGroupcache() *groupcache.Group {
 
-	ttl := 30 * time.Second
+	ttl := 60 * time.Second
 
 	log.Printf("groupcache ttl: %v", ttl)
 
@@ -50,26 +52,34 @@ func startGroupcache() *groupcache.Group {
 	//
 
 	const purgeExpired = true
-	const groupcacheSizeBytes = 1_000_000
 
 	// https://talks.golang.org/2013/oscon-dl.slide#46
 	//
 	// 64 MB max per-node memory usage
 
 	options := groupcache.Options{
-		Workspace:       workspace,
-		Name:            "files",
-		PurgeExpired:    purgeExpired,
-		CacheBytesLimit: groupcacheSizeBytes,
+		Workspace:                   workspace,
+		Name:                        "files",
+		PurgeExpired:                purgeExpired,
+		CacheBytesLimit:             8000,
+		ExpiredKeysEvictionInterval: 2 * time.Minute,
 		Getter: groupcache.GetterFunc(
 			func(_ /*ctx*/ context.Context, key string, dest groupcache.Sink, _ *groupcache.Info) error {
 
-				log.Printf("getter: loading: key:%s, ttl:%v", key, ttl)
+				var data []byte
 
-				data, errFile := os.ReadFile(key)
-				if errFile != nil {
-					return errFile
+				if strings.HasPrefix(key, "fake-") {
+					data = bytes.Repeat([]byte{'x'}, 3000)
+				} else {
+					var errFile error
+					data, errFile = os.ReadFile(key)
+					if errFile != nil {
+						return errFile
+					}
 				}
+
+				log.Printf("getter: loading: key:%s size:%d ttl:%v",
+					key, len(data), ttl)
 
 				time.Sleep(50 * time.Millisecond)
 
