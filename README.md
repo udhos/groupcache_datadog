@@ -35,3 +35,17 @@ $ groupcache-datadog-modernprogram
 2025/04/09 00:50:34 getter: loading: key:/etc/passwd, ttl:30s
 2025/04/09 00:50:34 INFO cache answer: bytes=2943 elapsed=50.548208ms, sleeping 5s
 ```
+
+# Datadog Count is a Delta
+
+## Definition
+
+The COUNT metric submission type represents the total number of event occurrences in one time interval. A COUNT can be used to track the total number of connections made to a database or the total number of requests to an endpoint. This number of events can accumulate or decrease over time—it is not monotonically increasing.
+
+## Example
+
+Suppose you are submitting a COUNT metric, notifications.sent, from a single host running the Datadog Agent. This host emits the following values in a flush time interval: [1,1,1,2,2,2,3,3].
+
+The Agent adds all of the values received in one time interval. Then, it submits the total number, in this case 15, as the COUNT metric’s value.
+
+Source: https://docs.datadoghq.com/metrics/types/?tab=count#definition
