@@ -7,7 +7,7 @@ toolchain go1.24.2 // preferred
 require (
 	github.com/DataDog/datadog-go/v5 v5.6.0
 	github.com/modernprogram/groupcache/v2 v2.7.1
-	github.com/udhos/groupcache_exporter v1.1.0
+	github.com/udhos/groupcache_exporter v1.1.1
 )
 
 require (
