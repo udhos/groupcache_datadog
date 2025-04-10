@@ -4,12 +4,8 @@ package exporter
 import (
 	"fmt"
 	"log/slog"
-	"os"
-	"slices"
-	"strings"
 	"time"
 
-	"github.com/DataDog/datadog-go/v5/statsd"
 	"github.com/udhos/groupcache_exporter"
 )
 
@@ -183,89 +179,4 @@ func (e *Exporter) exportGauge(metricName string, value float64, tags []string) 
 	if err := e.options.Client.Gauge(metricName, value, tags, e.options.SampleRate); err != nil {
 		slog.Error(fmt.Sprintf("exportGauge: error: %v", err))
 	}
-}
-
-// DatadogClientOptions define options for datadog client.
-type DatadogClientOptions struct {
-	// Host defaults to env var DD_AGENT_HOST. Undefined DD_AGENT_HOST defaults to localhost.
-	Host string
-
-	// Port defaults to env var DD_AGENT_PORT. Undefined DD_AGENT_PORT defaults to 8125.
-	Port string
-
-	// Namespace defaults to groupcache.
-	Namespace string
-
-	// Service is used to define default Tags. If undefined, defaults to DD_SERVICE.
-	Service string
-
-	// Tags defaults to env var DD_TAGS.
-	Tags []string
-
-	Debug bool
-}
-
-// NewDatadogClient creates datadog client.
-func NewDatadogClient(options DatadogClientOptions) (*statsd.Client, error) {
-
-	const me = "NewDatadogClient"
-
-	if options.Host == "" {
-		options.Host = envString("DD_AGENT_HOST", "localhost")
-	}
-
-	if options.Port == "" {
-		options.Port = envString("DD_AGENT_PORT", "8125")
-	}
-
-	if options.Namespace == "" {
-		options.Namespace = "groupcache"
-	}
-
-	if options.Service == "" {
-		options.Service = envString("DD_SERVICE", "service-unknown")
-	}
-
-	if len(options.Tags) == 0 {
-		options.Tags = strings.Fields(envString("DD_TAGS", ""))
-	}
-
-	// add service to tags
-	options.Tags = append(options.Tags, fmt.Sprintf("service:%s", options.Service))
-
-	slices.Sort(options.Tags)
-	options.Tags = slices.Compact(options.Tags)
-
-	host := fmt.Sprintf("%s:%s", options.Host, options.Port)
-
-	if options.Debug {
-		slog.Info(
-			me,
-			"host", host,
-			"namespace", options.Namespace,
-			"service", options.Service,
-			"tags", options.Tags,
-		)
-	}
-
-	c, err := statsd.New(host,
-		statsd.WithNamespace(options.Namespace),
-		statsd.WithTags(options.Tags))
-
-	return c, err
-}
-
-// envString extracts string from env var.
-// It returns the provided defaultValue if the env var is empty.
-// The string returned is also recorded in logs.
-func envString(name string, defaultValue string) string {
-	str := os.Getenv(name)
-	if str != "" {
-		slog.Info(fmt.Sprintf("%s=[%s] using %s=%s default=%s",
-			name, str, name, str, defaultValue))
-		return str
-	}
-	slog.Info(fmt.Sprintf("%s=[%s] using %s=%s default=%s",
-		name, str, name, defaultValue, defaultValue))
-	return defaultValue
 }

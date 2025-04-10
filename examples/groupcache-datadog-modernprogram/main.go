@@ -11,6 +11,7 @@ import (
 	"log/slog"
 
 	"github.com/modernprogram/groupcache/v2"
+	"github.com/udhos/dogstatsdclient/dogstatsdclient"
 	"github.com/udhos/groupcache_datadog/exporter"
 	"github.com/udhos/groupcache_exporter"
 	"github.com/udhos/groupcache_exporter/groupcache/modernprogram"
@@ -34,8 +35,9 @@ func main() {
 	if mockStatsd {
 		client = &statsdMock{}
 	} else {
-		c, errClient := exporter.NewDatadogClient(exporter.DatadogClientOptions{
-			Debug: true,
+		c, errClient := dogstatsdclient.New(dogstatsdclient.Options{
+			Namespace: "groupcache",
+			Debug:     true,
 		})
 		if errClient != nil {
 			slog.Error(errClient.Error())

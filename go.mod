@@ -5,13 +5,14 @@ go 1.23.8 // minimum
 toolchain go1.24.2 // preferred
 
 require (
-	github.com/DataDog/datadog-go/v5 v5.6.0
 	github.com/modernprogram/groupcache/v2 v2.7.1
+	github.com/udhos/dogstatsdclient v0.0.1
 	github.com/udhos/groupcache_exporter v1.1.1
 )
 
 require (
-	github.com/Microsoft/go-winio v0.5.0 // indirect
+	github.com/DataDog/datadog-go/v5 v5.6.0 // indirect
+	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
