@@ -10,12 +10,12 @@ import (
 
 	"log/slog"
 
-	"github.com/modernprogram/groupcache/v2"
+	"github.com/mailgun/groupcache/v2"
 	"github.com/udhos/dogstatsdclient/dogstatsdclient"
 	"github.com/udhos/groupcache_datadog/exporter"
 	"github.com/udhos/groupcache_datadog/internal/mock"
 	"github.com/udhos/groupcache_exporter"
-	"github.com/udhos/groupcache_exporter/groupcache/modernprogram"
+	"github.com/udhos/groupcache_exporter/groupcache/mailgun"
 )
 
 func main() {
@@ -49,7 +49,7 @@ func main() {
 
 	exporter := exporter.New(exporter.Options{
 		Client:         client,
-		Groups:         []groupcache_exporter.GroupStatistics{modernprogram.New(cache)},
+		Groups:         []groupcache_exporter.GroupStatistics{mailgun.New(cache)},
 		ExportInterval: 20 * time.Second,
 	})
 	defer exporter.Close()
@@ -70,7 +70,7 @@ func main() {
 func query(cache *groupcache.Group, key string) {
 	begin := time.Now()
 	var dst []byte
-	cache.Get(context.TODO(), key, groupcache.AllocatingByteSliceSink(&dst), nil)
+	cache.Get(context.TODO(), key, groupcache.AllocatingByteSliceSink(&dst))
 	elap := time.Since(begin)
 
 	slog.Info(fmt.Sprintf("cache answer: bytes=%d elapsed=%v",
