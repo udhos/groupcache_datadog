@@ -10,6 +10,31 @@
 
 See example [./examples/groupcache-datadog-modernprogram/main.go](./examples/groupcache-datadog-modernprogram/main.go).
 
+## Synopsis
+
+```go
+import "github.com/udhos/dogstatsdclient/dogstatsdclient"
+import "github.com/udhos/groupcache_datadog/exporter"
+import "github.com/udhos/groupcache_exporter"
+import "github.com/udhos/groupcache_exporter/groupcache/modernprogram"
+
+cache := startGroupcache() // create the groupcache group (*groupcache.Group)
+
+// create Dogstatsd client
+client, errClient := dogstatsdclient.New(dogstatsdclient.Options{
+    Namespace: "groupcache",
+    Debug:     true,
+})
+
+// start the exporter
+exporter := exporter.New(exporter.Options{
+    Client:         client,
+    Groups:         []groupcache_exporter.GroupStatistics{modernprogram.New(cache)},
+    ExportInterval: 20 * time.Second,
+})
+defer exporter.Close()
+```
+
 # Build example
 
 ```bash
