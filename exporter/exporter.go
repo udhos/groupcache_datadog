@@ -4,6 +4,7 @@ package exporter
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/udhos/groupcache_exporter"
@@ -28,6 +29,12 @@ type Options struct {
 
 	// ExportInterval defaults to 1 minute.
 	ExportInterval time.Duration
+
+	// HostnameTagKey defaults to "pod_name".
+	HostnameTagKey string
+
+	// DisableHostnameTag prevents adding hostname tag $HostnameTagKey:$hostname.
+	DisableHostnameTag bool
 }
 
 // ClientInterface is implemented by *statsd.Client.
@@ -48,6 +55,7 @@ type Exporter struct {
 	options       Options
 	done          chan struct{}
 	previousStats groupcache_exporter.Stats
+	hostname      string
 }
 
 // New creates an exporter.
@@ -60,9 +68,23 @@ func New(options Options) *Exporter {
 		options.ExportInterval = time.Minute
 	}
 
+	var hostname string
+
+	if !options.DisableHostnameTag {
+		if options.HostnameTagKey == "" {
+			options.HostnameTagKey = "pod_name"
+		}
+		h, err := os.Hostname()
+		if err != nil {
+			slog.Error(fmt.Sprintf("groupcache_datadog: exporter.New: hostname error: %v", err))
+		}
+		hostname = h
+	}
+
 	e := &Exporter{
-		options: options,
-		done:    make(chan struct{}),
+		options:  options,
+		done:     make(chan struct{}),
+		hostname: hostname,
 	}
 
 	go func() {
@@ -96,6 +118,11 @@ func (e *Exporter) Close() error {
 func (e *Exporter) exportGroup(g groupcache_exporter.GroupStatistics) {
 	groupName := g.Name()
 	tags := []string{fmt.Sprintf("group:%s", groupName)}
+
+	if e.hostname != "" {
+		tags = append(tags, fmt.Sprintf("%s:%s",
+			e.options.HostnameTagKey, e.hostname))
+	}
 
 	previousGroup := e.previousStats.Group
 
