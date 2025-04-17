@@ -6,7 +6,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
 	github.com/mailgun/groupcache/v2 v2.6.0
 	github.com/modernprogram/groupcache/v2 v2.7.2
-	github.com/udhos/dogstatsdclient v0.0.2
+	github.com/udhos/dogstatsdclient v0.0.3
 	github.com/udhos/groupcache_exporter v1.1.2
 )
 
