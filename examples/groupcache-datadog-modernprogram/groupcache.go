@@ -12,7 +12,7 @@ import (
 	"github.com/modernprogram/groupcache/v2"
 )
 
-func startGroupcache() *groupcache.Group {
+func startGroupcache() []*groupcache.Group {
 
 	ttl := 60 * time.Second
 
@@ -53,42 +53,47 @@ func startGroupcache() *groupcache.Group {
 
 	const purgeExpired = true
 
-	// https://talks.golang.org/2013/oscon-dl.slide#46
-	//
-	// 64 MB max per-node memory usage
+	var list []*groupcache.Group
 
-	options := groupcache.Options{
-		Workspace:                   workspace,
-		Name:                        "files",
-		PurgeExpired:                purgeExpired,
-		CacheBytesLimit:             8000,
-		ExpiredKeysEvictionInterval: 2 * time.Minute,
-		Getter: groupcache.GetterFunc(
-			func(_ /*ctx*/ context.Context, key string, dest groupcache.Sink, _ *groupcache.Info) error {
+	names := []string{"files1", "files2"}
 
-				var data []byte
+	for _, name := range names {
 
-				if strings.HasPrefix(key, "fake-") {
-					data = bytes.Repeat([]byte{'x'}, 3000)
-				} else {
-					var errFile error
-					data, errFile = os.ReadFile(key)
-					if errFile != nil {
-						return errFile
+		options := groupcache.Options{
+			Workspace:                   workspace,
+			Name:                        name,
+			PurgeExpired:                purgeExpired,
+			CacheBytesLimit:             8000,
+			ExpiredKeysEvictionInterval: 2 * time.Minute,
+			Getter: groupcache.GetterFunc(
+				func(_ /*ctx*/ context.Context, key string, dest groupcache.Sink, _ *groupcache.Info) error {
+
+					var data []byte
+
+					if strings.HasPrefix(key, "fake-") {
+						data = bytes.Repeat([]byte{'x'}, 3000)
+					} else {
+						var errFile error
+						data, errFile = os.ReadFile(key)
+						if errFile != nil {
+							return errFile
+						}
 					}
-				}
 
-				log.Printf("getter: loading: key:%s size:%d ttl:%v",
-					key, len(data), ttl)
+					log.Printf("getter: loading: key:%s size:%d ttl:%v",
+						key, len(data), ttl)
 
-				time.Sleep(50 * time.Millisecond)
+					time.Sleep(50 * time.Millisecond)
 
-				expire := time.Now().Add(ttl)
-				return dest.SetBytes(data, expire)
-			}),
+					expire := time.Now().Add(ttl)
+					return dest.SetBytes(data, expire)
+				}),
+		}
+
+		cache := groupcache.NewGroupWithWorkspace(options)
+
+		list = append(list, cache)
 	}
 
-	cache := groupcache.NewGroupWithWorkspace(options)
-
-	return cache
+	return list
 }

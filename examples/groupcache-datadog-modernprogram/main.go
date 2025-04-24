@@ -21,11 +21,15 @@ import (
 func main() {
 
 	var mockStatsd bool
+	var debugExporter bool
+	var debugDogstatsd bool
 	flag.BoolVar(&mockStatsd, "mockStatsd", false, "mock statsd")
+	flag.BoolVar(&debugExporter, "debugExporter", false, "enable exporter debug")
+	flag.BoolVar(&debugDogstatsd, "debugDogstatsd", false, "enable dogstatsd debug")
 	flag.Parse()
 	slog.Info("flag", "mockStatds", mockStatsd)
 
-	cache := startGroupcache()
+	caches := startGroupcache()
 
 	//
 	// metrics exporter
@@ -38,7 +42,7 @@ func main() {
 	} else {
 		c, errClient := dogstatsdclient.New(dogstatsdclient.Options{
 			Namespace: "groupcache",
-			Debug:     true,
+			Debug:     debugDogstatsd,
 		})
 		if errClient != nil {
 			slog.Error(errClient.Error())
@@ -47,10 +51,17 @@ func main() {
 		client = c
 	}
 
+	var groups []groupcache_exporter.GroupStatistics
+
+	for _, g := range caches {
+		groups = append(groups, modernprogram.New(g))
+	}
+
 	exporter := exporter.New(exporter.Options{
 		Client:         client,
-		Groups:         []groupcache_exporter.GroupStatistics{modernprogram.New(cache)},
+		Groups:         groups,
 		ExportInterval: 20 * time.Second,
+		Debug:          debugExporter,
 	})
 	defer exporter.Close()
 
@@ -61,9 +72,11 @@ func main() {
 	const interval = 5 * time.Second
 
 	for i := 0; ; i++ {
-		query(cache, "/etc/passwd")             // repeat key
-		query(cache, fmt.Sprintf("fake-%d", i)) // always miss, and gets evicted
-		time.Sleep(interval)
+		for _, cache := range caches {
+			query(cache, "/etc/passwd")             // repeat key
+			query(cache, fmt.Sprintf("fake-%d", i)) // always miss, and gets evicted
+			time.Sleep(interval)
+		}
 	}
 }
 

@@ -35,6 +35,9 @@ type Options struct {
 
 	// DisableHostnameTag prevents adding hostname tag $HostnameTagKey:$hostname.
 	DisableHostnameTag bool
+
+	// Debug enables debugging logs.
+	Debug bool
 }
 
 // ClientInterface is implemented by *statsd.Client.
@@ -54,7 +57,7 @@ type ClientInterface interface {
 type Exporter struct {
 	options       Options
 	done          chan struct{}
-	previousStats groupcache_exporter.Stats
+	previousStats map[string]groupcache_exporter.Stats
 	hostname      string
 }
 
@@ -82,9 +85,10 @@ func New(options Options) *Exporter {
 	}
 
 	e := &Exporter{
-		options:  options,
-		done:     make(chan struct{}),
-		hostname: hostname,
+		options:       options,
+		done:          make(chan struct{}),
+		hostname:      hostname,
+		previousStats: map[string]groupcache_exporter.Stats{},
 	}
 
 	go func() {
@@ -124,9 +128,18 @@ func (e *Exporter) exportGroup(g groupcache_exporter.GroupStatistics) {
 			e.options.HostnameTagKey, e.hostname))
 	}
 
-	previousGroup := e.previousStats.Group
+	previousStats := e.previousStats[groupName]
+	previousGroup := previousStats.Group
 
 	stats := g.Collect()
+
+	if e.options.Debug {
+		slog.Info("exportGroup",
+			"group", groupName,
+			"stats", stats,
+		)
+	}
+
 	group := stats.Group
 
 	//
@@ -155,10 +168,10 @@ func (e *Exporter) exportGroup(g groupcache_exporter.GroupStatistics) {
 	e.exportCount("server_requests", deltaServerRequests, tags)
 	e.exportCount("crosstalk_refusals", deltaCrosstalkRefusals, tags)
 
-	e.exportGroupType(e.previousStats.Main, stats.Main, tags, "type:main")
-	e.exportGroupType(e.previousStats.Hot, stats.Hot, tags, "type:hot")
+	e.exportGroupType(previousStats.Main, stats.Main, tags, "type:main")
+	e.exportGroupType(previousStats.Hot, stats.Hot, tags, "type:hot")
 
-	e.previousStats = stats // save for next collection
+	e.previousStats[groupName] = stats // save for next collection
 }
 
 func (e *Exporter) exportGroupType(prev,
@@ -196,14 +209,27 @@ func getCacheDelta(prev, curr groupcache_exporter.CacheTypeStats) cacheDelta {
 	}
 }
 
+func (e *Exporter) debugMetric(metricName string, value any, tags []string) {
+	if e.options.Debug {
+		slog.Info("groupcache_datadog debugMetric",
+			"metric", metricName,
+			"value", value,
+			"tags", tags,
+			"sample_rate", e.options.SampleRate,
+		)
+	}
+}
+
 func (e *Exporter) exportCount(metricName string, value int64, tags []string) {
+	e.debugMetric(metricName, value, tags)
 	if err := e.options.Client.Count(metricName, value, tags, e.options.SampleRate); err != nil {
-		slog.Error(fmt.Sprintf("exportCount: error: %v", err))
+		slog.Error(fmt.Sprintf("groupcache_datadog exportCount: error: %v", err))
 	}
 }
 
 func (e *Exporter) exportGauge(metricName string, value float64, tags []string) {
+	e.debugMetric(metricName, value, tags)
 	if err := e.options.Client.Gauge(metricName, value, tags, e.options.SampleRate); err != nil {
-		slog.Error(fmt.Sprintf("exportGauge: error: %v", err))
+		slog.Error(fmt.Sprintf("groupcache_datadog exportGauge: error: %v", err))
 	}
 }
