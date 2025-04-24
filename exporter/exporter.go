@@ -63,6 +63,18 @@ type Exporter struct {
 
 // New creates an exporter.
 func New(options Options) *Exporter {
+
+	{
+		// reject dup group name
+		m := map[string]struct{}{}
+		for _, g := range options.Groups {
+			if _, found := m[g.Name()]; found {
+				panic(fmt.Sprintf("invalid dup group name: %s", g.Name()))
+			}
+			m[g.Name()] = struct{}{}
+		}
+	}
+
 	if options.SampleRate == 0 {
 		options.SampleRate = 1
 	}
