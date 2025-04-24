@@ -6,7 +6,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
 	github.com/mailgun/groupcache/v2 v2.6.0
 	github.com/modernprogram/groupcache/v2 v2.7.2
-	github.com/udhos/dogstatsdclient v0.0.3
+	github.com/udhos/dogstatsdclient v0.0.4
 	github.com/udhos/groupcache_exporter v1.1.2
 )
 
@@ -20,7 +20,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.63.0 // indirect
-	github.com/prometheus/procfs v0.16.0 // indirect
+	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	golang.org/x/sys v0.32.0 // indirect
