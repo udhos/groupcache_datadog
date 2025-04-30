@@ -49,7 +49,7 @@ func main() {
 
 	exporter := exporter.New(exporter.Options{
 		Client:         client,
-		Groups:         []groupcache_exporter.GroupStatistics{mailgun.New(cache)},
+		ListGroups:     func() []groupcache_exporter.GroupStatistics { return mailgun.ListGroups() },
 		ExportInterval: 20 * time.Second,
 	})
 	defer exporter.Close()

@@ -12,7 +12,7 @@ import (
 	"github.com/modernprogram/groupcache/v2"
 )
 
-func startGroupcache() []*groupcache.Group {
+func startGroupcache(workspace *groupcache.Workspace) []*groupcache.Group {
 
 	ttl := 60 * time.Second
 
@@ -21,8 +21,6 @@ func startGroupcache() []*groupcache.Group {
 	//
 	// create groupcache pool
 	//
-
-	workspace := groupcache.NewWorkspace()
 
 	groupcachePort := ":5000"
 
