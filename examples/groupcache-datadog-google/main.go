@@ -48,8 +48,10 @@ func main() {
 	}
 
 	exporter := exporter.New(exporter.Options{
-		Client:         client,
-		Groups:         []groupcache_exporter.GroupStatistics{google.New(cache)},
+		Client: client,
+		ListGroups: func() []groupcache_exporter.GroupStatistics {
+			return google.ListGroups([]*groupcache.Group{cache})
+		},
 		ExportInterval: 20 * time.Second,
 	})
 	defer exporter.Close()

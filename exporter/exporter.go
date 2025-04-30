@@ -12,14 +12,8 @@ import (
 
 // Options define exporter options.
 type Options struct {
-	// Groups is list of groupcache groups to export metrics.
-	//
-	// This is one example about how to create a group suitable to Groups:
-	// import "github.com/udhos/groupcache_exporter/groupcache/modernprogram"
-	// cache := ... // create groupcache group
-	// groupStat := modernprogram.New(cache)
-	//
-	Groups []groupcache_exporter.GroupStatistics
+	// ListGroups function must provide current list of groupcache groups.
+	ListGroups func() []groupcache_exporter.GroupStatistics
 
 	// Client interface is implemented by *statsd.Client.
 	Client ClientInterface
@@ -63,17 +57,6 @@ type Exporter struct {
 
 // New creates an exporter.
 func New(options Options) *Exporter {
-
-	{
-		// reject dup group name
-		m := map[string]struct{}{}
-		for _, g := range options.Groups {
-			if _, found := m[g.Name()]; found {
-				panic(fmt.Sprintf("invalid dup group name: %s", g.Name()))
-			}
-			m[g.Name()] = struct{}{}
-		}
-	}
 
 	if options.SampleRate == 0 {
 		options.SampleRate = 1
@@ -120,7 +103,7 @@ func New(options Options) *Exporter {
 
 // exportOnce all metrics once.
 func (e *Exporter) exportOnce() {
-	for _, g := range e.options.Groups {
+	for _, g := range e.options.ListGroups() {
 		e.exportGroup(g)
 	}
 }

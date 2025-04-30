@@ -5,9 +5,9 @@ go 1.24.2
 require (
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
 	github.com/mailgun/groupcache/v2 v2.6.0
-	github.com/modernprogram/groupcache/v2 v2.7.2
+	github.com/modernprogram/groupcache/v2 v2.7.6
 	github.com/udhos/dogstatsdclient v0.0.4
-	github.com/udhos/groupcache_exporter v1.2.2
+	github.com/udhos/groupcache_exporter v1.3.1
 )
 
 require (

@@ -29,7 +29,9 @@ func main() {
 	flag.Parse()
 	slog.Info("flag", "mockStatds", mockStatsd)
 
-	caches := startGroupcache()
+	workspace := groupcache.NewWorkspace()
+
+	caches := startGroupcache(workspace)
 
 	//
 	// metrics exporter
@@ -51,15 +53,9 @@ func main() {
 		client = c
 	}
 
-	var groups []groupcache_exporter.GroupStatistics
-
-	for _, g := range caches {
-		groups = append(groups, modernprogram.New(g))
-	}
-
 	exporter := exporter.New(exporter.Options{
 		Client:         client,
-		Groups:         groups,
+		ListGroups:     func() []groupcache_exporter.GroupStatistics { return modernprogram.ListGroups(workspace) },
 		ExportInterval: 20 * time.Second,
 		Debug:          debugExporter,
 	})
