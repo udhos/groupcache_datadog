@@ -140,28 +140,19 @@ func (e *Exporter) exportGroup(g groupcache_exporter.GroupStatistics) {
 	//
 	// datadog counter is delta
 	//
-	deltaGets := group.CounterGets - previousGroup.CounterGets
-	deltaHits := group.CounterHits - previousGroup.CounterHits
-	deltaPeerLoads := group.CounterPeerLoads - previousGroup.CounterPeerLoads
-	deltaPeerErrors := group.CounterPeerErrors - previousGroup.CounterPeerErrors
-	deltaLoads := group.CounterLoads - previousGroup.CounterLoads
-	deltaLoadsDeduped := group.CounterLoadsDeduped - previousGroup.CounterLoadsDeduped
-	deltaLocalLoads := group.CounterLocalLoads - previousGroup.CounterLocalLoads
-	deltaLocalLoadsErrs := group.CounterLocalLoadsErrs - previousGroup.CounterLocalLoadsErrs
-	deltaServerRequests := group.CounterServerRequests - previousGroup.CounterServerRequests
-	deltaCrosstalkRefusals := group.CounterCrosstalkRefusals - previousGroup.CounterCrosstalkRefusals
+	delta := groupcache_exporter.GetCacheDelta(previousGroup, group)
 
-	e.exportCount("gets", deltaGets, tags)
-	e.exportCount("hits", deltaHits, tags)
+	e.exportCount("gets", delta.Gets, tags)
+	e.exportCount("hits", delta.Hits, tags)
 	e.exportGauge("get_from_peers_latency_slowest_milliseconds", float64(group.GaugeGetFromPeersLatencyLower), tags)
-	e.exportCount("peer_loads", deltaPeerLoads, tags)
-	e.exportCount("peer_errors", deltaPeerErrors, tags)
-	e.exportCount("loads", deltaLoads, tags)
-	e.exportCount("loads_deduped", deltaLoadsDeduped, tags)
-	e.exportCount("local_load", deltaLocalLoads, tags)
-	e.exportCount("local_load_errs", deltaLocalLoadsErrs, tags)
-	e.exportCount("server_requests", deltaServerRequests, tags)
-	e.exportCount("crosstalk_refusals", deltaCrosstalkRefusals, tags)
+	e.exportCount("peer_loads", delta.PeerLoads, tags)
+	e.exportCount("peer_errors", delta.PeerErrors, tags)
+	e.exportCount("loads", delta.Loads, tags)
+	e.exportCount("loads_deduped", delta.LoadsDeduped, tags)
+	e.exportCount("local_load", delta.LocalLoads, tags)
+	e.exportCount("local_load_errs", delta.LocalLoadsErrs, tags)
+	e.exportCount("server_requests", delta.ServerRequests, tags)
+	e.exportCount("crosstalk_refusals", delta.CrosstalkRefusals, tags)
 
 	e.exportGroupType(previousStats.Main, stats.Main, tags, "type:main")
 	e.exportGroupType(previousStats.Hot, stats.Hot, tags, "type:hot")
@@ -178,30 +169,14 @@ func (e *Exporter) exportGroupType(prev,
 	//
 	// datadog counter is delta
 	//
-	delta := getCacheDelta(prev, curr)
+	delta := groupcache_exporter.GetCacheTypeDelta(prev, curr)
 
 	e.exportGauge("cache_items", float64(curr.GaugeCacheItems), t)
 	e.exportGauge("cache_bytes", float64(curr.GaugeCacheBytes), t)
-	e.exportCount("cache_gets", delta.gets, t)
-	e.exportCount("cache_hits", delta.hits, t)
-	e.exportCount("cache_evictions", delta.evictions, t)
-	e.exportCount("cache_evictions_nonexpired", delta.evictionsNonExpired, t)
-}
-
-type cacheDelta struct {
-	gets                int64
-	hits                int64
-	evictions           int64
-	evictionsNonExpired int64
-}
-
-func getCacheDelta(prev, curr groupcache_exporter.CacheTypeStats) cacheDelta {
-	return cacheDelta{
-		gets:                curr.CounterCacheGets - prev.CounterCacheGets,
-		hits:                curr.CounterCacheHits - prev.CounterCacheHits,
-		evictions:           curr.CounterCacheEvictions - prev.CounterCacheEvictions,
-		evictionsNonExpired: curr.CounterCacheEvictionsNonExpired - prev.CounterCacheEvictionsNonExpired,
-	}
+	e.exportCount("cache_gets", delta.Gets, t)
+	e.exportCount("cache_hits", delta.Hits, t)
+	e.exportCount("cache_evictions", delta.Evictions, t)
+	e.exportCount("cache_evictions_nonexpired", delta.EvictionsNonExpired, t)
 }
 
 func (e *Exporter) debugMetric(metricName string, value any, tags []string) {

@@ -7,7 +7,7 @@ require (
 	github.com/mailgun/groupcache/v2 v2.6.0
 	github.com/modernprogram/groupcache/v2 v2.7.6
 	github.com/udhos/dogstatsdclient v0.0.4
-	github.com/udhos/groupcache_exporter v1.3.1
+	github.com/udhos/groupcache_exporter v1.3.2
 )
 
 require (
