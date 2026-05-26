@@ -1,15 +1,15 @@
 module github.com/udhos/groupcache_datadog
 
-go 1.25.9 // minimum
+go 1.25.10 // minimum
 
-toolchain go1.26.2 // preferred
+toolchain go1.26.3 // preferred
 
 require (
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
 	github.com/mailgun/groupcache/v2 v2.6.0
-	github.com/modernprogram/groupcache/v2 v2.7.14
+	github.com/modernprogram/groupcache/v2 v2.7.18
 	github.com/udhos/dogstatsdclient v1.1.3
-	github.com/udhos/groupcache_exporter v1.3.9
+	github.com/udhos/groupcache_exporter v1.3.10
 )
 
 require (
@@ -26,6 +26,6 @@ require (
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
-	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
